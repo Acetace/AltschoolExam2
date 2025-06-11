@@ -87,7 +87,7 @@ Which ensures the node app runs in the baackground and starts automatically on r
 
 
 
-# To connect a custom domain, i registeres a the domain domainmerchants.online at namecheap
+# To connect a custom domain, i registered the domain domainmerchants.online at namecheap
 Then set DNS Records on the registrar's settings by pointing the records to my public IP
 Type: A  
 Name: @ or www  
@@ -114,13 +114,39 @@ sudo nginx -t
 sudo systemctl reload nginx
 
  
-##  Secured the Site with HTTPS Using Let’s Encrypt & Certbot
+## 4. Secured the Site with HTTPS Using Let’s Encrypt & Certbot
 # To protect traffic between the browser and the server, I installed a free SSL certificate using Let’s Encrypt and automated it with Certbot.
 # Install Certbot and Nginx plugin:
  sudo apt update
  sudo apt install certbot python3-certbot-nginx
 # Obtain and install SSL certificate:
 - sudo certbot --nginx -d domainmerchants.online -d www.domainmerchants.online
+
+## 5. Git Initialization & GitHub Integration
+ # I initialized git locally
+ -cd ~/myapp
+  - git init
+ # Added and commit files
+ - git add .
+ - git commit -m "Initial commit with HTML and server setup"
+ # Created a remote repository
+ i created a new repository on GitHub: https://github.com/Acetace/AltschoolExam2
+ # Linked the remote
+ -  git remote add origin https://github.com/Acetace/AltschoolExam2.git
+# Pull to merge history (since the remote had a README or existing commits)
+ - git pull origin main --allow-unrelated-histories --no-rebase
+# Authenticate and Push (Since GitHub removed password-based authentication, i used a Personal Access Token (PAT) in place of a password)
+ - git push -u origin main
+
+
+
+
+
+####
+Public IP: 51.20.6.12
+
+Domain: https://www.domainmerchants.online
+
 
 
 
