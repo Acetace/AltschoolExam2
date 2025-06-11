@@ -177,7 +177,3 @@ git push -u origin main
   ![Landing Page](screenshot.png)
 
 ---
-
-## 🏁 Conclusion
-
-This project demonstrates the deployment of a modern, secure web application with full cloud hosting, reverse proxy setup, and production-ready configurations. It is now live, SSL-secured, and fully automated.
