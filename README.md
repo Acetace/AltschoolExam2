@@ -174,6 +174,3 @@ git push -u origin main
 - **Public IP**: `51.20.6.12`
 - **Live Site**: [https://www.domainmerchants.online](https://www.domainmerchants.online)
   
-![Screenshot](screenshot.jpg)
-
----
