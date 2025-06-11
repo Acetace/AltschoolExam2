@@ -28,7 +28,7 @@ This project demonstrates how to set up a **production-ready web server** on an 
 # (Bonus) Set up Nginx as a reverse proxy for a simple Node.js app.
 To improve the structure and scalability of the application, i configured Nginx to act as a reverse proxy that forwards HTTP requests to a Node.js server running on port 3000.
 This setup is commonly used in production environments for better performance, security, and SSL termination.
-# We installed Node.js and npm on the Ubuntu server:
+# I installed Node.js and npm on the Ubuntu server:
   sudo apt update
   sudo apt install nodejs npm -y
 # Inside the home directory, i created a new folder for the app:
