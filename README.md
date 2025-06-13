@@ -24,86 +24,126 @@ This project showcases a fully deployed and secure web server, featuring:
   ssh -i your-key.pem ubuntu@your-ec2-ip
   ```
 - Opened inbound ports:
-  - `22` (SSH)
-  - `80` (HTTP)
+  - `22` (SSH) - from anywhere (0.0.0.0)
+  - `80` (HTTP) - from anywhere (0.0.0.0)
   - `443` (HTTPS)
 
 ---
 
-## 🌐 2. Web Server: Nginx + Node.js Reverse Proxy
+## 2. Web Server
+- Installed **Nginx**:
+  ```bash
+  sudo apt update && sudo apt upgrade -y
+  sudo apt install nginx -y
+  ```
+- Configured Nginx to serve the landing page.
 
-### ✅ Installed Nginx
-```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install nginx -y
-```
+### (Bonus) Set up Nginx as a reverse proxy for a simple Node.js app
+To improve the structure and scalability of the application, Nginx was configured to act as a reverse proxy that forwards HTTP requests to a Node.js server running on port 3000.
+This setup is commonly used in production environments for better performance, security, and SSL termination.
 
-### ✅ Installed Node.js and npm
-```bash
-sudo apt install nodejs npm -y
-```
+- Installed Node.js and npm:
+  ```bash
+  sudo apt update
+  sudo apt install nodejs npm -y
+  ```
+- Created Node.js app:
+  ```bash
+  mkdir myapp && cd myapp
+  nano server.js
+  ```
+- Added this code in `server.js`:
+  ```js
+  const http = require('http');
+  const port = 3000;
 
-### ✅ Created a Simple Node.js App
-```bash
-mkdir ~/myapp && cd ~/myapp
-nano server.js
-```
+  http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end('<h1>Hello from Node.js behind Nginx!</h1>');
+  }).listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+  });
+  ```
+- Started the app using:
+  ```bash
+  node server.js
+  ```
 
-Paste this code into `server.js`:
-```js
-const http = require('http');
-const port = 3000;
+- Installed PM2 to keep Node.js running in the background:
+  ```bash
+  sudo npm install -g pm2
+  pm2 start server.js
+  pm2 save
+  pm2 startup
+  ```
 
-http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/html' });
-  res.end('<h1>Hello from Node.js behind Nginx!</h1>');
-}).listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-});
-```
+- Restarted Nginx to apply changes:
+  ```bash
+  sudo systemctl restart nginx
+  ```
 
-Start the app:
-```bash
-node server.js
-```
+- Tested by visiting public IP and domain in the browser.
 
-Or use PM2 to keep it running in the background:
-```bash
-sudo npm install -g pm2
-pm2 start server.js
-pm2 save
-pm2 startup
-```
+---
 
-### ✅ Configure Nginx as Reverse Proxy
+## 2b. 🌐 Connecting Domain to Static Landing Page
 
-Edit the default Nginx config:
-```bash
-sudo nano /etc/nginx/sites-available/default
-```
+After configuring Nginx and setting up your Node.js reverse proxy, we connected the domain to serve our **HTML + Tailwind CSS** landing page directly from the Ubuntu server.
 
-Replace the content with:
-```nginx
-server {
-    listen 80;
-    server_name domainmerchants.online www.domainmerchants.online;
+### 🛠 Steps to Serve Static Landing Page at Root (`/`)
 
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
+1. **DNS Configuration**  
+   The domain `domainmerchants.online` was registered on Namecheap and DNS was pointed to the EC2 server’s public IP:
+   - Type: `A`  
+   - Name: `@` and `www`  
+   - Value: `51.20.6.12`
+  Verified with:
+  ```bash
+  ping domainmerchants.online
+  ```
+     
+2. **Placed Static Files in Nginx Web Root**
+   ```bash
+   sudo mv ~/index.html /var/www/html/
+   sudo chown www-data:www-data /var/www/html/index.html
+   ```
 
-Test and restart Nginx:
-```bash
-sudo nginx -t
-sudo systemctl restart nginx
-```
+3. **Updated Nginx Configuration**  
+   Edited `/etc/nginx/sites-available/default`:
+   ```nginx
+   server {
+       listen 80;
+       server_name domainmerchants.online www.domainmerchants.online;
+
+       root /var/www/html;
+       index index.html;
+
+       # Serve static files at root
+       location / {
+           try_files $uri $uri/ =404;
+       }
+
+       # Reverse proxy to Node.js app at /api
+       location /api {
+           proxy_pass http://localhost:3000;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection 'upgrade';
+           proxy_set_header Host $host;
+           proxy_cache_bypass $http_upgrade;
+       }
+   }
+   ```
+
+4. **Reloaded Nginx**
+   ```bash
+   sudo nginx -t
+   sudo systemctl reload nginx
+   ```
+
+5. **Result**
+   - `https://domainmerchants.online/` now shows the **custom landing page**.
+   - `https://domainmerchants.online/api` serves the **Node.js response**: _“Hello from Node.js behind Nginx!”_
 
 ---
 
@@ -118,26 +158,9 @@ sudo systemctl restart nginx
 
 ---
 
-## 🌍 4. Domain & DNS Configuration
-
-- Registered domain: `domainmerchants.online` via Namecheap
-- Updated DNS records to point to server's public IP:
-
-| Type | Name | Value (IP)    | TTL     |
-|------|------|---------------|---------|
-| A    | @    | 51.20.6.12     | Default |
-| A    | www  | 51.20.6.12     | Default |
-
-Verified with:
-```bash
-ping domainmerchants.online
-```
-
----
-
-## 🔒 5. HTTPS with Let’s Encrypt & Certbot
-
-Secured the website using **Let’s Encrypt** SSL certificate.
+## 4. Networking & Security
+- Allowed inbound traffic on Port 80 and 443.
+- (Bonus) Used Let’s Encrypt with Certbot to install free SSL certificate (HTTPS).
 
 ### 🔧 Steps:
 ```bash
@@ -152,18 +175,31 @@ sudo certbot renew --dry-run
 
 ---
 
-## 🔗 6. GitHub Deployment
-
-### ✅ Initialized Git and Linked Repository
-```bash
-cd ~/myapp
-git init
-git add .
-git commit -m "Initial commit with HTML and server setup"
-git remote add origin https://github.com/Acetace/AltschoolExam2.git
-git pull origin main --allow-unrelated-histories
-git push -u origin main
-```
+## 5. Git Initialization & GitHub Integration
+- Initialized git locally:
+  ```bash
+  cd ~/myapp
+  git init
+  ```
+- Added and committed files:
+  ```bash
+  git add .
+  git commit -m "Initial commit with HTML and server setup"
+  ```
+- Created a remote repository:
+  [GitHub Repo](https://github.com/Acetace/AltschoolExam2)
+- Linked the remote:
+  ```bash
+  git remote add origin https://github.com/Acetace/AltschoolExam2.git
+  ```
+- Pulled to merge history:
+  ```bash
+  git pull origin main --allow-unrelated-histories --no-rebase
+  ```
+- Pushed to GitHub using Personal Access Token:
+  ```bash
+  git push -u origin main
+  ```
 
 > ⚠️ Used a **GitHub Personal Access Token** for authentication instead of a password.
 
@@ -173,6 +209,6 @@ git push -u origin main
 
 - **Public IP**: `51.20.6.12`
 - **Live Site**: [https://www.domainmerchants.online](https://www.domainmerchants.online)
-- ![Screenshot]()
+- 
 
   
