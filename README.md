@@ -209,6 +209,7 @@ sudo certbot renew --dry-run
 
 - **Public IP**: `51.20.6.12`
 - **Live Site**: [https://www.domainmerchants.online](https://www.domainmerchants.online)
-- 
+- ![Screenshot of the live site](https://github.com/Acetace/AltschoolExan2/blob/main/Altscreenshot.JPG?raw=true)
+
 
   
