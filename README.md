@@ -209,7 +209,7 @@ sudo certbot renew --dry-run
 
 - **Public IP**: `51.20.6.12`
 - **Live Site**: [https://www.domainmerchants.online](https://www.domainmerchants.online)
-- [screenshot] (ALTScreenshot.JPG)
+- [screenshot](ALTScreenshot.JPG)
 
 
   
